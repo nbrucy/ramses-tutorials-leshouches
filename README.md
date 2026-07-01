@@ -7,7 +7,7 @@ You can browse all the tutorial material [at this link](https://ramses-tutorials
 If you wish to run the tutorials, clone this ramses-tutorials repository:
 
 ```
-git clone https://github.com/ramses-organisation/ramses-tutorials.git
+git clone https://github.com/nbrucy/ramses-tutorials-leshouches.git
 ```
 and start with the `Fundamentals` tutorial:
 ```
