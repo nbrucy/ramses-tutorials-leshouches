@@ -1,0 +1,87 @@
+This is the RAMSES parameter file for the isothermal decaying turbulence test.
+
+&RUN_PARAMS
+hydro=.true.
+/
+
+&AMR_PARAMS
+levelmin=5
+levelmax=5
+ngridmax=500000
+boxlen=200
+/
+
+&HYDRO_PARAMS
+gamma=1.4
+courant_factor=0.8
+scheme='muscl'
+slope_type=1
+riemann='hllc'
+pressure_fix=.true.
+beta_fix=0.5
+/
+
+&INIT_PARAMS
+! set uniform density and pressure
+nregion=1
+region_type='square'
+x_center=100
+y_center=100
+z_center=100
+length_x=200
+length_y=200
+length_z=200
+exp_region=10
+d_region=2.
+p_region=10.
+! set turbulent velocity field
+filetype='grafic'
+initfile(1)='ic'
+/
+
+&OUTPUT_PARAMS
+noutput=2
+tout=1,50
+/
+
+&UNITS_PARAMS
+units_density=2.3247434d-24
+units_time=3.1556926d13
+units_length=3.0857d18
+/
+
+&COOLING_PARAMS
+barotropic_eos=.true. ! Change for Adiabatic or ism evolution
+barotropic_eos_form='isothermal'
+T_eos=10
+!cooling=.true. ! Uncomment for ISM cooling
+!cooling_ism=.true. ! Uncomment for ISM cooling
+mu_gas=1.4
+z_ave=1.0
+/
+
+&FEEDBACK_PARAMS
+eta_sn=0. ! Fraction of the mass of star in the injecta
+rbubble=10 ! Size of the SN injection bubble in pc
+f_ek=0 ! Fraction of kinetic injection
+f_w=0 ! Mass loading factor of the SN
+/
+
+&MOVIE_PARAMS
+movie=.true.
+imov=0
+tstartmov=0.
+tendmov=50
+imovout=50
+nw_frame=1000
+nh_frame=1000
+levelmax_frame=7
+xcentre_frame=100.0,0.,0.,0.,100.0,0.,0.,0.,100.0,0.,0.,0.
+ycentre_frame=100.0,0.,0.,0.,100.0,0.,0.,0.,100.0,0.,0.,0.
+zcentre_frame=100.0,0.,0.,0.,100.0,0.,0.,0.,100.0,0.,0.,0.
+deltax_frame=200.0,0.,200.0,0.,200.0,0.
+deltay_frame=200.0,0.,200.0,0.,200.0,0.
+deltaz_frame=200.0,0.,10.0,0.,200.0,0.
+proj_axis='zzx'
+movie_vars_txt = 'dens','temp'
+/
