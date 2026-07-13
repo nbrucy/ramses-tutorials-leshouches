@@ -20,7 +20,7 @@ After this, **close the terminal**.
 ## 2. Download the ramses tutorials repository
 Open a new terminal and type the following:
 ```bash
-git clone https://github.com/ramses-organisation/ramses-tutorials.git
+git clone https://github.com/nbrucy/ramses-tutorials-leshouches.git
 ```
 
 ## 3. Install required python packages
