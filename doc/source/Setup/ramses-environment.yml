@@ -25,4 +25,3 @@ dependencies:
   - gsl
   - ffmpeg
   - osyris
-  - turbustat
