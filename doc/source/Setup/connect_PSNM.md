@@ -43,7 +43,7 @@ Host PSMN_sr650node230
 
 ```bash
 ssh-add # star the ssh agent
-Host PSMN_sr650node230
+ssh PSMN_sr650node230
 ```
 
 ## Setup the environnement
