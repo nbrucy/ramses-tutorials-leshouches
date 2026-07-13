@@ -61,7 +61,7 @@ z_ave=1.0
 /
 
 &FEEDBACK_PARAMS
-eta_sn=0. ! Fraction of the mass of star in the injecta
+eta_sn=0.2 ! Fraction of the mass of star in the injecta
 rbubble=10 ! Size of the SN injection bubble in pc
 f_ek=0 ! Fraction of kinetic injection
 f_w=0 ! Mass loading factor of the SN
