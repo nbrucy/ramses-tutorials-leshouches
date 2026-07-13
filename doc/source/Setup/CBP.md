@@ -27,8 +27,8 @@ git clone https://github.com/ramses-organisation/ramses-tutorials.git
 
 In order to install all packages we need, type the following:
 ```bash
+source .bashrc
 cd ramses-tutorials/doc/source/Setup
-conda update -n base conda
 conda env create -f ramses-environment-cbp.yml
 ```
 Now, the conda environment for the ramses tutorials is created, as you can see by typing `conda env list`. In order to **use** the ramses environment, you have to **activate** it by running following command:
