@@ -599,7 +599,7 @@ def main(arg):
         pcubes["krs"] = pcube(fcubes["krsx"], fcubes["krsy"], fcubes["krsz"])
         pcubes["velocity_z"] = pcube(fcubes["velocity_z"])
         if arg.magnetic:
-            pcubes["magnetic_field"] = pcube(fcubes["Bx"], fcubes["By"], fcubes["Bz"])
+            pcubes["B"] = pcube(fcubes["Bx"], fcubes["By"], fcubes["Bz"])
             pcubes["cos_vB"] = pcube(fcubes["cos_vB"])
 
         print("Compute 3D power spectra")
@@ -616,7 +616,7 @@ def main(arg):
             "velocity_z",
         ]
         if arg.magnetic:
-            vspec += ["magnetic_field", "cos_vB"]
+            vspec += ["B", "cos_vB"]
             
         if arg.return_arrays:
                 ret[iout]["3d"] = {}
