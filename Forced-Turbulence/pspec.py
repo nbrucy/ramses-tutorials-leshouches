@@ -10,7 +10,7 @@ import textwrap
 from builtins import range
 
 import numpy as np
-
+from numba import jit
 import yt
 
 import tables as T
@@ -453,6 +453,15 @@ parser.add_argument(
     default=True,
 )
 
+parser.add_argument(
+    "-b",
+    "--bidimensional",
+    help="Also compute 2D arrays",
+    type=bool,
+    default=True,
+)
+
+
 
 def main(arg):
     add_pspec2 = False
@@ -697,167 +706,169 @@ def main(arg):
 
         # Memory cleanup ---------------------------------------------------------------
         del pcubes
+        
+        if arg.bidimensional:
 
-        print("Calculate 2D wave numbers")
-        # 2D wave numbers --------------------------------------------------------------
-        cubes_k, kbins, knorm = calc_k(
-            1 << clvl, arg.kbins, arg.kbinsbig, arg.dkbig, 2, saxis
-        )
-        if arg.magnetic:
-            _, knorm_Bpar, knorm_Bperp = proj_B(
-                cubes_k, kbins, Bavg2, "B", dim=2, saxis=saxis, update=True
+            print("Calculate 2D wave numbers")
+            # 2D wave numbers --------------------------------------------------------------
+            cubes_k, kbins, knorm = calc_k(
+                1 << clvl, arg.kbins, arg.kbinsbig, arg.dkbig, 2, saxis
             )
-
-        print("Project 3D -> 2D")
-        # 3D -> 2D ---------------------------------------------------------------------
-        fcubes2 = {}
-
-        vars2D = [
-            "density",
-            "logrho",
-            "velocity_x",
-            "velocity_y",
-            "velocity_z",
-            "krx",
-            "kry",
-            "krz",
-            "velocity_c",
-            "velocity_sx",
-            "velocity_sy",
-            "velocity_sz",
-            "krc",
-            "krsx",
-            "krsy",
-            "krsz",
-        ]
-        if arg.magnetic:
-            vars2D += ["Bx", "By", "Bz", "cos_vB"]
-        for v in vars2D:
-            fcubes2[v] = ifft(fcubes[v], axis=saxis)
-
-        # Memory cleanup ---------------------------------------------------------------
-        del fcubes
-
-        print("Compute 2D power cubes")
-        # 2D power cubes ---------------------------------------------------------------
-        pcubes2 = {}
-        pcubes2["density"] = pcube(fcubes2["density"])
-        pcubes2["logrho"] = pcube(fcubes2["logrho"])
-        pcubes2["velocity"] = pcube(fcubes2["velocity_x"], fcubes2["velocity_y"], fcubes2["velocity_z"])
-        pcubes2["kr"] = pcube(fcubes2["krx"], fcubes2["kry"], fcubes2["krz"])
-        pcubes2["velocity_c"] = pcube(fcubes2["velocity_c"])
-        pcubes2["velocity_s"] = pcube(fcubes2["velocity_sx"], fcubes2["velocity_sy"], fcubes2["velocity_sz"])
-        pcubes2["krc"] = pcube(fcubes2["krc"])
-        pcubes2["krs"] = pcube(fcubes2["krsx"], fcubes2["krsy"], fcubes2["krsz"])
-
-        if arg.magnetic:
-            pcubes2["B"] = pcube(fcubes2["Bx"], fcubes2["By"], fcubes2["Bz"])
-            pcubes2["cos_vB"] = pcube(fcubes2["cos_vB"])
-
-        print("Compute 2D power spectra")
-        # 2D power spectra -------------------------------------------------------------
-        ns = 2**clvl
-        f = "_%%(i)0%dd" % (np.floor(np.log10(ns)) + 1)
-        
-        if arg.return_arrays:
-            ret[iout]["2d"] = {}
-        
-        
-        for v in list(pcubes2.keys()):
-            for i in range(ns):
-                pspec, kbins, pspec2, fbins = pspectrum(
-                    pcubes2[v][:, :, i], cubes_k["k"][:, :, i], kbins, knorm, arg.fbins
+            if arg.magnetic:
+                _, knorm_Bpar, knorm_Bperp = proj_B(
+                    cubes_k, kbins, Bavg2, "B", dim=2, saxis=saxis, update=True
                 )
 
-                if arg.magnetic:
-                    pspec_Bpar, _, _, _ = pspectrum(
-                        pcubes2[v][:, :, i],
-                        cubes_k["kBpar"][:, :, i],
-                        kbins,
-                        knorm_Bpar,
-                        0,
+            print("Project 3D -> 2D")
+            # 3D -> 2D ---------------------------------------------------------------------
+            fcubes2 = {}
+
+            vars2D = [
+                "density",
+                "logrho",
+                "velocity_x",
+                "velocity_y",
+                "velocity_z",
+                "krx",
+                "kry",
+                "krz",
+                "velocity_c",
+                "velocity_sx",
+                "velocity_sy",
+                "velocity_sz",
+                "krc",
+                "krsx",
+                "krsy",
+                "krsz",
+            ]
+            if arg.magnetic:
+                vars2D += ["Bx", "By", "Bz", "cos_vB"]
+            for v in vars2D:
+                fcubes2[v] = ifft(fcubes[v], axis=saxis)
+
+            # Memory cleanup ---------------------------------------------------------------
+            del fcubes
+
+            print("Compute 2D power cubes")
+            # 2D power cubes ---------------------------------------------------------------
+            pcubes2 = {}
+            pcubes2["density"] = pcube(fcubes2["density"])
+            pcubes2["logrho"] = pcube(fcubes2["logrho"])
+            pcubes2["velocity"] = pcube(fcubes2["velocity_x"], fcubes2["velocity_y"], fcubes2["velocity_z"])
+            pcubes2["kr"] = pcube(fcubes2["krx"], fcubes2["kry"], fcubes2["krz"])
+            pcubes2["velocity_c"] = pcube(fcubes2["velocity_c"])
+            pcubes2["velocity_s"] = pcube(fcubes2["velocity_sx"], fcubes2["velocity_sy"], fcubes2["velocity_sz"])
+            pcubes2["krc"] = pcube(fcubes2["krc"])
+            pcubes2["krs"] = pcube(fcubes2["krsx"], fcubes2["krsy"], fcubes2["krsz"])
+
+            if arg.magnetic:
+                pcubes2["B"] = pcube(fcubes2["Bx"], fcubes2["By"], fcubes2["Bz"])
+                pcubes2["cos_vB"] = pcube(fcubes2["cos_vB"])
+
+            print("Compute 2D power spectra")
+            # 2D power spectra -------------------------------------------------------------
+            ns = 2**clvl
+            f = "_%%(i)0%dd" % (np.floor(np.log10(ns)) + 1)
+            
+            if arg.return_arrays:
+                ret[iout]["2d"] = {}
+            
+            
+            for v in list(pcubes2.keys()):
+                for i in range(ns):
+                    pspec, kbins, pspec2, fbins = pspectrum(
+                        pcubes2[v][:, :, i], cubes_k["k"][:, :, i], kbins, knorm, arg.fbins
                     )
-                    pspec_Bperp, kbins, _, _ = pspectrum(
-                        pcubes2[v][:, :, i],
-                        cubes_k["kBperp"][:, :, i],
-                        kbins,
-                        knorm_Bperp,
-                        0,
-                    )
 
-                # Save 2D power spectra
-                suff = f % {"i": i}
-                params = {"iout": iout, "varname": v, "dim": 2}
-                outfile = arg.outfile % params
-                outpath = arg.nodename % params
+                    if arg.magnetic:
+                        pspec_Bpar, _, _, _ = pspectrum(
+                            pcubes2[v][:, :, i],
+                            cubes_k["kBpar"][:, :, i],
+                            kbins,
+                            knorm_Bpar,
+                            0,
+                        )
+                        pspec_Bperp, kbins, _, _ = pspectrum(
+                            pcubes2[v][:, :, i],
+                            cubes_k["kBperp"][:, :, i],
+                            kbins,
+                            knorm_Bperp,
+                            0,
+                        )
 
-                h5fd = T.open_file(outfile, mode="a")
+                    # Save 2D power spectra
+                    suff = f % {"i": i}
+                    params = {"iout": iout, "varname": v, "dim": 2}
+                    outfile = arg.outfile % params
+                    outpath = arg.nodename % params
 
-                for n in [
-                    "pspec",
-                    "kbins",
-                    "pspec2",
-                    "fbins",
-                    "norm",
-                    "pspec_Bpar",
-                    "pspec_Bperp",
-                    "norm_Bpar",
-                    "norm_Bperp",
-                ]:
+                    h5fd = T.open_file(outfile, mode="a")
+
+                    for n in [
+                        "pspec",
+                        "kbins",
+                        "pspec2",
+                        "fbins",
+                        "norm",
+                        "pspec_Bpar",
+                        "pspec_Bperp",
+                        "norm_Bpar",
+                        "norm_Bperp",
+                    ]:
+                        try:
+                            h5fd.remove_node(outpath, n + suff, recursive=True)
+                        except T.NoSuchNodeError:
+                            pass
+                        
+                    if arg.return_arrays:
+                        ret[iout]["2d"][v] = {}        
+                        ret[iout]["2d"][v]["pspec"] = pspec
+                        ret[iout]["2d"][v]["kbins"] = kbins
+                        ret[iout]["2d"][v]["norm"] = knorm
+                        
+                        if arg.magnetic:
+                            ret[iout]["3d"][v]["pspec_Bpar"] = pspec_Bpar
+                            ret[iout]["3d"][v]["norm_Bpar"] = knorm_Bpar
+                            ret[iout]["3d"][v]["pspec_Bperp"] = pspec_Bperp
+                            ret[iout]["3d"][v]["norm_Bperp"] = knorm_Bpar
+                        
+                        
+
+                    h5fd.create_array(outpath, "pspec" + suff, pspec, createparents=True)
+
+                    if arg.magnetic:
+                        h5fd.create_array(
+                            outpath, "pspec_Bpar" + suff, pspec_Bpar, createparents=True
+                        )
+                        h5fd.create_array(
+                            outpath, "pspec_Bperp" + suff, pspec_Bperp, createparents=True
+                        )
+
+                    h5fd.create_array(outpath, "kbins" + suff, kbins, createparents=True)
+                    if add_pspec2:
+                        h5fd.create_array(
+                            outpath, "pspec2" + suff, pspec2, createparents=True
+                        )
+                        h5fd.create_array(
+                            outpath, "fbins" + suff, fbins, createparents=True
+                        )
+                    h5fd.create_array(outpath, "norm" + suff, knorm, createparents=True)
+
+                    if arg.magnetic:
+                        h5fd.create_array(
+                            outpath, "norm_Bpar" + suff, knorm_Bpar, createparents=True
+                        )
+                        h5fd.create_array(
+                            outpath, "norm_Bperp" + suff, knorm_Bperp, createparents=True
+                        )
+
                     try:
-                        h5fd.remove_node(outpath, n + suff, recursive=True)
+                        h5fd.remove_node(outpath, "meta", recursive=True)
                     except T.NoSuchNodeError:
                         pass
-                    
-                if arg.return_arrays:
-                    ret[iout]["2d"][v] = {}        
-                    ret[iout]["2d"][v]["pspec"] = pspec
-                    ret[iout]["2d"][v]["kbins"] = kbins
-                    ret[iout]["2d"][v]["norm"] = knorm
-                    
-                    if arg.magnetic:
-                        ret[iout]["3d"][v]["pspec_Bpar"] = pspec_Bpar
-                        ret[iout]["3d"][v]["norm_Bpar"] = knorm_Bpar
-                        ret[iout]["3d"][v]["pspec_Bperp"] = pspec_Bperp
-                        ret[iout]["3d"][v]["norm_Bperp"] = knorm_Bpar
-                    
-                    
-
-                h5fd.create_array(outpath, "pspec" + suff, pspec, createparents=True)
-
-                if arg.magnetic:
-                    h5fd.create_array(
-                        outpath, "pspec_Bpar" + suff, pspec_Bpar, createparents=True
-                    )
-                    h5fd.create_array(
-                        outpath, "pspec_Bperp" + suff, pspec_Bperp, createparents=True
-                    )
-
-                h5fd.create_array(outpath, "kbins" + suff, kbins, createparents=True)
-                if add_pspec2:
-                    h5fd.create_array(
-                        outpath, "pspec2" + suff, pspec2, createparents=True
-                    )
-                    h5fd.create_array(
-                        outpath, "fbins" + suff, fbins, createparents=True
-                    )
-                h5fd.create_array(outpath, "norm" + suff, knorm, createparents=True)
-
-                if arg.magnetic:
-                    h5fd.create_array(
-                        outpath, "norm_Bpar" + suff, knorm_Bpar, createparents=True
-                    )
-                    h5fd.create_array(
-                        outpath, "norm_Bperp" + suff, knorm_Bperp, createparents=True
-                    )
-
-                try:
-                    h5fd.remove_node(outpath, "meta", recursive=True)
-                except T.NoSuchNodeError:
-                    pass
 
 
-                h5fd.close()
+                    h5fd.close()
     return ret
 
 
