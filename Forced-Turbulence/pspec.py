@@ -10,7 +10,6 @@ import textwrap
 from builtins import range
 
 import numpy as np
-from numba import jit
 import yt
 
 import tables as T
